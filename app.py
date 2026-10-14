@@ -27,25 +27,31 @@ def parse_dims(text):
     return [float(match.group(1)), float(match.group(2)), float(match.group(3))] if match else [0.0, 0.0, 0.0]
 
 dims = df_tally['item_description'].apply(parse_dims)
-df_tally['tally_l'] = [d for d in dims]
-df_tally['tally_w'] = [d for d in dims]
+df_tally['tally_l'] = [d[0] for d in dims]
+df_tally['tally_w'] = [d[1] for d in dims]
 
 def process_yield(row):
     sheets = int(row['output_sheets_count'])
-    if sheets <= 0: return [0.0, 0.0, "Supervisor Typo Alert"]
+    if sheets <= 0: 
+        return [0.0, 0.0, "Supervisor Typo Alert"]
+        
     vol_cu_in = row['sliced_length_inches'] * row['sliced_width_inches'] * row['sliced_thickness_inches'] * sheets
     out_weight = vol_cu_in * 1.63871e-5 * row['foam_density']
     waste_pct = ((row['input_chemical_weight_kg'] - out_weight) / row['input_chemical_weight_kg']) * 100
+    
     status = "Critical Cutting Wastage" if waste_pct > 15.0 else ("Data Logic Violation" if waste_pct < 0 else "Optimal Yield Profile")
     return [round(out_weight, 2), round(waste_pct, 1), status]
 
+# CRITICAL FIX: Execute mapping and unpack values sequentially to prevent object serialization errors
 yield_metrics = df_factory.apply(process_yield, axis=1)
-df_factory['clean_weight_kg'] = [m for m in yield_metrics]
-df_factory['waste_percentage'] = [m for m in yield_metrics]
-df_factory['pipeline_status'] = [m for m in yield_metrics]
+df_factory['clean_weight_kg'] = [m[0] for m in yield_metrics]
+df_factory['waste_percentage'] = [m[1] for m in yield_metrics]
+df_factory['pipeline_status'] = [m[2] for m in yield_metrics]
 
+# Clean math calculation now executes flawlessly on raw float arrays
 df_factory['waste_weight_kg'] = df_factory['input_chemical_weight_kg'] - df_factory['clean_weight_kg']
 df_factory['financial_waste_loss_inr'] = df_factory['waste_weight_kg'] * 180
+
 df_factory['month'] = pd.to_datetime(df_factory['date']).dt.to_period('M').astype(str)
 df_tally['month'] = pd.to_datetime(df_tally['invoice_date']).dt.to_period('M').astype(str)
 
