@@ -40,8 +40,8 @@ def parse_dims(text):
     return [float(match.group(1)), float(match.group(2)), float(match.group(3))] if match else [0.0, 0.0, 0.0]
 
 dims = df_tally['item_description'].apply(parse_dims)
-df_tally['tally_l'] = [d for d in dims]
-df_tally['tally_w'] = [d for d in dims]
+df_tally['tally_l'] = [d[0] for d in dims]
+df_tally['tally_w'] = [d[1] for d in dims]
 
 def process_yield(row):
     sheets = int(row['output_sheets_count'])
@@ -54,9 +54,9 @@ def process_yield(row):
 
 # FIXED UNPACKING: Extracts individual float arrays to prevent list serialization crashes
 yield_metrics = df_factory.apply(process_yield, axis=1)
-df_factory['clean_weight_kg'] = [m for m in yield_metrics]
-df_factory['waste_percentage'] = [m for m in yield_metrics]
-df_factory['pipeline_status'] = [m for m in yield_metrics]
+df_factory['clean_weight_kg'] = [m[0] for m in yield_metrics]
+df_factory['waste_percentage'] = [m[1] for m in yield_metrics]
+df_factory['pipeline_status'] = [m[2] for m in yield_metrics]
 
 # Mathematical operators now run flawlessly across plain numerical columns
 df_factory['waste_weight_kg'] = df_factory['input_chemical_weight_kg'] - df_factory['clean_weight_kg']
@@ -88,7 +88,7 @@ with col2:
     st.bar_chart(df_factory.groupby('foam_density')['clean_weight_kg'].sum())
 st.markdown("---")
 
-# --- GRID RECONCILIATION (Correct Tuple Indexing) ---
+# --- GRID RECONCILIATION (Fixed Tuple Parsing) ---
 st.markdown("#### 🔍 Warehouse Shrinkage Audit Ledger (Produced vs Invoiced)")
 prod_totals = df_factory.groupby(['sliced_length_inches', 'sliced_width_inches'])['output_sheets_count'].sum().to_dict()
 sold_totals = df_tally.groupby(['tally_l', 'tally_w'])['quantity_sold'].sum().to_dict()
@@ -98,7 +98,7 @@ for key, produced_units in prod_totals.items():
     sold_units = sold_totals.get(key, 0)
     shrinkage = max(0, produced_units - sold_units)
     
-    # SYSTEM CORRECTION: Extract variables sequentially via explicit item indexing to bypass tuple error
+    # Extract values cleanly from the tuple key to prevent TypeError
     length_val = int(key[0])
     width_val = int(key[1])
     
