@@ -7,7 +7,7 @@ st.set_page_config(page_title="FoamPulse Core Dashboard", page_icon="🏭", layo
 
 # Custom Title Block with Branding (Corrected HTML Parameters)
 st.markdown("<h1 style='text-align: center; color: #FF4B4B;'>🏭 FoamPulse Core: Manufacturing Analytics Suite</h1>", unsafe_allow_html=True)
-st.markdown("<h3 style='text-align: center; color: #555555;'>Automated Volumetric Reconciliation & Operational Visualizer</h3>", unsafe_view=None)
+st.markdown("<h3 style='text-align: center; color: #555555;'>Automated Volumetric Reconciliation & Operational Visualizer</h3>", unsafe_allow_html=True)
 st.markdown("---")
 
 # Secure Cloud Mounting: Check if databases exist. If not, generate them silently.
