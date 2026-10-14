@@ -5,10 +5,11 @@ import os
 
 st.set_page_config(page_title="FoamPulse Core Dashboard", page_icon="🏭", layout="wide")
 
-# Custom Title Block with Branding
-st.markdown("<h1 style='text-align: center; color: #FF4B4B;'>🏭 FoamPulse Core: Manufacturing Analytics Suite</h1>", unsafe_view=True)
-st.markdown("<h3 style='text-align: center; color: #555555;'>Automated Volumetric Reconciliation & Operational Visualizer</h3>", unsafe_view=True)
+# Custom Title Block with Branding (Corrected HTML Parameters)
+st.markdown("<h1 style='text-align: center; color: #FF4B4B;'>🏭 FoamPulse Core: Manufacturing Analytics Suite</h1>", unsafe_allow_html=True)
+st.markdown("<h3 style='text-align: center; color: #555555;'>Automated Volumetric Reconciliation & Operational Visualizer</h3>", unsafe_allow_html=True)
 st.markdown("---")
+
 
 # Secure Cloud Mounting: Check if databases exist. If not, generate them silently.
 if not os.path.exists('factory_production_logs.csv') or not os.path.exists('tally_sales_export.csv'):
