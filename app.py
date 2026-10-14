@@ -40,8 +40,8 @@ def parse_dims(text):
     return [float(match.group(1)), float(match.group(2)), float(match.group(3))] if match else [0.0, 0.0, 0.0]
 
 dims = df_tally['item_description'].apply(parse_dims)
-df_tally['tally_l'] = [d for d in dims]
-df_tally['tally_w'] = [d for d in dims]
+df_tally['tally_l'] = [d[0] for d in dims]
+df_tally['tally_w'] = [d[1] for d in dims]
 
 def process_yield(row):
     sheets = int(row['output_sheets_count'])
@@ -52,13 +52,16 @@ def process_yield(row):
     status = "Critical Cutting Wastage" if waste_pct > 15.0 else ("Data Logic Violation" if waste_pct < 0 else "Optimal Yield Profile")
     return [round(out_weight, 2), round(waste_pct, 1), status]
 
+# EXECUTIVE FIXED UNPACKING: Extracts individual float arrays to prevent list serialization crashes
 yield_metrics = df_factory.apply(process_yield, axis=1)
-df_factory['clean_weight_kg'] = [m for m in yield_metrics]
-df_factory['waste_percentage'] = [m for m in yield_metrics]
-df_factory['pipeline_status'] = [m for m in yield_metrics]
+df_factory['clean_weight_kg'] = [m[0] for m in yield_metrics]
+df_factory['waste_percentage'] = [m[1] for m in yield_metrics]
+df_factory['pipeline_status'] = [m[2] for m in yield_metrics]
 
+# Mathematical operators now run flawlessly across plain numerical columns
 df_factory['waste_weight_kg'] = df_factory['input_chemical_weight_kg'] - df_factory['clean_weight_kg']
 df_factory['financial_waste_loss_inr'] = df_factory['waste_weight_kg'] * 180
+
 df_factory['month'] = pd.to_datetime(df_factory['date']).dt.to_period('M').astype(str)
 df_tally['month'] = pd.to_datetime(df_tally['invoice_date']).dt.to_period('M').astype(str)
 
